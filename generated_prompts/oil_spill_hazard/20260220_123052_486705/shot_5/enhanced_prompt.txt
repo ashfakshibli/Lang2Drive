@@ -1,0 +1,16 @@
+KEYWORD: Oil Spill Hazard
+SCENARIO_KEYWORD: oil_spill_hazard
+SHOT_INDEX: 5
+
+ORIGINAL PROMPT:
+Generate Carla PythonAPI code for a highway where an oil spill creates a slippery patch in one lane. Vehicles approaching at speed must detect reduced traction, slow down, and avoid sudden steering. The scene should include hazard markers, reflective road surface, and traffic flow.
+
+SCENE SPECIFICATIONS:
+Road Context: Town04 highway corridor with at least two lanes per direction and long drivable spline continuity.
+Traffic Density: Minimum traffic density: >=20 moving vehicles in each travel direction (ego direction and opposite), plus >=20 nearby vehicles across adjacent lanes/merge context; fail run if thresholds are not met after retries.
+Camera Contract: Save synchronized front, front_left, front_right, rear, and drone_follow streams using matched frame ids.
+Event Contract: Stage a large overturned truck with broad oil-spill zone, dense cones, warning signs, and emergency response vehicles.
+Success Criteria: Oil spill looks visually distinct; ego and surrounding traffic show hazard-aware speed/lane behavior around spill area.
+
+ENHANCED PROMPT:
+Generate Carla PythonAPI code for a highway where an oil spill creates a slippery patch in one lane. Vehicles approaching at speed must detect reduced traction, slow down, and avoid sudden steering. The scene should include hazard markers, reflective road surface, and traffic flow.

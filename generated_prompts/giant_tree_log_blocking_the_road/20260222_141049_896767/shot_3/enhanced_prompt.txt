@@ -1,0 +1,16 @@
+KEYWORD: Giant Tree Log Blocking the Road
+SCENARIO_KEYWORD: giant_tree_log_blocking_the_road
+SHOT_INDEX: 3
+
+ORIGINAL PROMPT:
+Generate Carla PythonAPI code for a suburban road where a massive fallen tree log completely blocks one lane. Vehicles must brake, slow, or swerve into the opposite lane (if safe) to continue forward. Include roadside vegetation, traffic flow, and hazard placement with proper collision behavior.
+
+SCENE SPECIFICATIONS:
+Road Context: Tree-lined multilane bidirectional road corridor on a straight segment just after a 4-way intersection (ego and fallen tree are NOT inside the intersection). Prefer a corridor with visible opposite-direction traffic flow.
+Traffic Density: Minimum traffic density target remains >=20 moving vehicles per required direction when map capacity allows, with dense traffic concentrated near ego. Spawn vehicles relative to the ego after ego spawn, fill adjacent lanes beside ego, and keep visible oncoming traffic beyond the fallen tree on the opposite side.
+Camera Contract: Front camera only by default (`front`). Only generate 5-angle capture (`front`, `front_left`, `front_right`, `rear`, `drone_follow`) if explicitly requested.
+Event Contract: Use `static.prop.mesh` with beech-tree meshes to create a REAL fallen tree/log that appears to fall from the sidewalk/curb sideways into the ego-side lanes. Place the fallen tree within 100m of ego (target ~90m). Do NOT place warning cones or barriers before the fallen tree.
+Success Criteria: Front camera clearly shows ego approaching a sideways fallen tree blocking ego-side lanes, dense adjacent traffic around ego, and visible oncoming traffic flowing on the opposite side beyond the tree.
+
+ENHANCED PROMPT:
+Generate Carla PythonAPI code for a suburban road where a massive fallen tree log completely blocks one lane. Vehicles must brake, slow, or swerve into the opposite lane (if safe) to continue forward. Include roadside vegetation, traffic flow, and hazard placement with proper collision behavior.

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "matrix_output_subdir": "time_weather_matrix",
+  "time_presets": [
+    {
+      "key": "noon",
+      "label": "Noon",
+      "sun_altitude_angle": 45.0,
+      "sun_azimuth_angle": 240.0,
+      "streetlights": "auto"
+    },
+    {
+      "key": "sunset",
+      "label": "Sunset",
+      "sun_altitude_angle": 2.0,
+      "sun_azimuth_angle": 268.0,
+      "streetlights": "auto"
+    },
+    {
+      "key": "night",
+      "label": "Night",
+      "sun_altitude_angle": -88.0,
+      "sun_azimuth_angle": 320.0,
+      "streetlights": "auto"
+    },
+    {
+      "key": "sunrise",
+      "label": "Sunrise",
+      "sun_altitude_angle": 1.05,
+      "sun_azimuth_angle": 28.28,
+      "streetlights": "auto"
+    },
+    {
+      "key": "almost_night_no_streetlights",
+      "label": "Almost night (no streetlights)",
+      "sun_altitude_angle": 0.01,
+      "sun_azimuth_angle": 110.0,
+      "streetlights": "off"
+    }
+  ],
+  "weather_presets": [
+    {
+      "key": "clear",
+      "label": "Clear",
+      "cloudiness": 10.0,
+      "precipitation": 0.0,
+      "precipitation_deposits": 15.0,
+      "wind_intensity": 6.0,
+      "fog_density": 0.0,
+      "fog_distance": 150.0,
+      "wetness": 25.0
+    },
+    {
+      "key": "storm",
+      "label": "Storm",
+      "cloudiness": 100.0,
+      "precipitation": 95.0,
+      "precipitation_deposits": 100.0,
+      "wind_intensity": 80.0,
+      "fog_density": 28.0,
+      "fog_distance": 55.0,
+      "wetness": 100.0
+    },
+    {
+      "key": "foggy",
+      "label": "Foggy",
+      "cloudiness": 70.0,
+      "precipitation": 0.0,
+      "precipitation_deposits": 40.0,
+      "wind_intensity": 8.0,
+      "fog_density": 68.0,
+      "fog_distance": 28.0,
+      "wetness": 60.0
+    },
+    {
+      "key": "worst",
+      "label": "Worst",
+      "cloudiness": 100.0,
+      "precipitation": 100.0,
+      "precipitation_deposits": 100.0,
+      "wind_intensity": 95.0,
+      "fog_density": 85.0,
+      "fog_distance": 14.0,
+      "wetness": 100.0
+    }
+  ]
+}

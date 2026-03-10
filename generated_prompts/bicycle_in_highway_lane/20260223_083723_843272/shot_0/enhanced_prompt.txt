@@ -1,0 +1,16 @@
+KEYWORD: Bicycle in Highway Lane
+SCENARIO_KEYWORD: bicycle_in_highway_lane
+SHOT_INDEX: 0
+
+ORIGINAL PROMPT:
+Generate Carla PythonAPI code for a highway scene where a cyclist enters the rightmost lane of a high-speed road and continues riding. Cars traveling at highway speed must detect the bicycle and adjust by braking, overtaking, or changing lanes. The scenario should include at least one bicycle actor, highway traffic flow, and lane discipline from surrounding vehicles
+
+SCENE SPECIFICATIONS:
+Road Context: Town04 highway corridor with at least two lanes per direction and long drivable spline continuity.
+Traffic Density: Minimum traffic density: >=20 moving vehicles in each travel direction (ego direction and opposite), plus >=20 nearby vehicles across adjacent lanes/merge context. CRITICAL: Spawn vehicles concentrated behind and beside ego vehicle. Vehicles in left lanes must be visibly passing ego. Vehicles behind ego must be visible in rear camera.
+Camera Contract: Save synchronized front, front_left, front_right, rear, and drone_follow streams using matched frame ids.
+Event Contract: Use Town04 highway segment only. Spawn MULTIPLE bicycles (3-5) ahead of ego in the rightmost highway lane, lane-aligned on road spline, riding in a group/cluster. Ego vehicle must be positioned directly behind the bicycle group, following closely. Other vehicles on adjacent left lanes should be passing ego and bicycles on the left side.
+Success Criteria: Multiple bicycles visible ahead of ego in same lane. Ego follows closely behind bicycle group. Left-lane traffic passes ego and bikes. Dense traffic visible behind and beside ego.
+
+ENHANCED PROMPT:
+Generate Carla PythonAPI code for a highway scene where a cyclist enters the rightmost lane of a high-speed road and continues riding. Cars traveling at highway speed must detect the bicycle and adjust by braking, overtaking, or changing lanes. The scenario should include at least one bicycle actor, highway traffic flow, and lane discipline from surrounding vehicles

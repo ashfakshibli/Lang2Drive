@@ -1,0 +1,16 @@
+KEYWORD: Sudden Pedestrian Crossing
+SCENARIO_KEYWORD: sudden_pedestrian_crossing
+SHOT_INDEX: 0
+
+ORIGINAL PROMPT:
+Generate Carla PythonAPI code for a four-lane city road where a pedestrian suddenly runs across the street outside of a crosswalk. Vehicles are approaching at normal urban speed and must react to avoid hitting the pedestrian. The environment should include sidewalks, nearby traffic, and realistic pedestrian behavior (running/jaywalking across lanes).
+
+SCENE SPECIFICATIONS:
+Road Context: Signalized urban 4-way intersection baseline, two lanes per direction, with active cross-traffic in all approaches.
+Traffic Density: Minimum traffic density: >=20 moving vehicles per approach direction (north/south/east/west equivalent) at event onset, with >=80 active vehicles in broader scene; fail run if thresholds are not met after retries.
+Camera Contract: Save synchronized front, front_left, front_right, rear, and drone_follow streams using matched frame ids.
+Event Contract: Pedestrian enters travel lane abruptly from occluded edge/median in front of ego.
+Success Criteria: Crossing event is visible with clear temporal onset and braking/yield response.
+
+ENHANCED PROMPT:
+Generate Carla PythonAPI code for a four-lane city road where a pedestrian suddenly runs across the street outside of a crosswalk. Vehicles are approaching at normal urban speed and must react to avoid hitting the pedestrian. The environment should include sidewalks, nearby traffic, and realistic pedestrian behavior (running/jaywalking across lanes).

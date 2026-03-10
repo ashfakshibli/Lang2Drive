@@ -1,0 +1,9 @@
+KEYWORD: Red Light Violation
+SCENARIO_KEYWORD: red_light_violation
+SHOT_INDEX: 0
+
+ORIGINAL PROMPT:
+Generate Carla PythonAPI code for a traffic-light-controlled intersection where one car violates the red signal by continuing straight ahead through the intersection. Other cars are correctly stopped at the red light in their lanes. Pedestrians are waiting at the crosswalk, and the violating vehicle narrowly passes them. Ensure the scene includes traffic lights, multiple vehicles, and correct lane placement.
+
+ENHANCED PROMPT:
+Generate Carla PythonAPI code for a traffic-light-controlled intersection where one car violates the red signal by continuing straight ahead through the intersection. Other cars are correctly stopped at the red light in their lanes. Pedestrians are waiting at the crosswalk, and the violating vehicle narrowly passes them. Ensure the scene includes traffic lights, multiple vehicles, and correct lane placement.

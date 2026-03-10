@@ -1,0 +1,397 @@
+Generate complete, runnable CARLA PythonAPI code for this scenario.
+
+SCENARIO: bicycle_in_highway_lane
+DESCRIPTION: Generate Carla PythonAPI code for a highway scene where a cyclist enters the rightmost lane of a high-speed road and continues riding. Cars traveling at highway speed must detect the bicycle and adjust by braking, overtaking, or changing lanes. The scenario should include at least one bicycle actor, highway traffic flow, and lane discipline from surrounding vehicles
+SCENE_SPECIFICATIONS: Road Context: Town04 highway corridor with at least two lanes per direction and long drivable spline continuity.
+Traffic Density: Minimum traffic density: >=20 moving vehicles in each travel direction (ego direction and opposite), plus >=20 nearby vehicles across adjacent lanes/merge context. CRITICAL: Spawn vehicles concentrated behind and beside ego vehicle. Vehicles in left lanes must be visibly passing ego. Vehicles behind ego must be visible in rear camera.
+Camera Contract: Save synchronized front, front_left, front_right, rear, and drone_follow streams using matched frame ids.
+Event Contract: Use Town04 highway segment only. Spawn MULTIPLE bicycles (3-5) ahead of ego in the rightmost highway lane, lane-aligned on road spline, riding in a group/cluster. Ego vehicle must be positioned directly behind the bicycle group, following closely. Other vehicles on adjacent left lanes should be passing ego and bicycles on the left side.
+Success Criteria: Multiple bicycles visible ahead of ego in same lane. Ego follows closely behind bicycle group. Left-lane traffic passes ego and bikes. Dense traffic visible behind and beside ego.
+
+OUTPUT CAMERA DEFAULT:
+- Default capture is FRONT camera only.
+- Only generate 5-angle capture (`front`, `front_left`, `front_right`, `rear`, `drone_follow`) when the user or scene specification explicitly asks for all views / multi-angle capture.
+
+================================================================================
+=== MANDATORY REQUIREMENTS (ALL SCENARIOS MUST IMPLEMENT THESE) ===
+================================================================================
+
+1. CONNECTION AND ERROR HANDLING
+- client.set_timeout(60.0) before any world operations
+- Test CARLA connection before proceeding
+- Use try/except/finally with comprehensive cleanup
+- Use try_spawn_actor() with fallback spawn points
+- Handle camera attachment with proper error checking
+
+1.5 EGO VEHICLE, MAP SELECTION, AND WORLD CLEANUP (REQUIRED)
+- Ego vehicle must ALWAYS be a Tesla sedan (vehicle.tesla.model3) unless the scenario explicitly specifies a different ego.
+- If vehicle.tesla.model3 blueprint is unavailable, fallback to a similar sedan (vehicle.* sedan) but still prefer Tesla first.
+- Prefer loading the selected map fresh:
+    world = client.load_world(<map_name>)
+  but handle CARLA reconnect instability robustly:
+  - retry map load on timeout/connection errors
+  - reconnect client and re-check active map
+  - if the selected map is already active after reconnect, continue
+  - do NOT fail immediately on first map-load transport error
+- Before spawning any new actors, clear existing vehicles from the map to avoid interference:
+    for actor in world.get_actors().filter('vehicle.*'):
+        actor.destroy()
+- Map selection (global default): use LOCAL signalized 4-lane roads (2 lanes each way, e.g., Town03/Town05 intersections) unless the scenario explicitly requires highway/freeway/expressway.
+- Only select highway maps/roads when the scenario description explicitly requires highway/freeway/expressway behavior.
+
+1.8 UNIVERSAL BUSY-AREA BASELINE (REQUIRED FOR ALL SCENARIOS)
+- Local-road/intersection scenarios:
+  - Stage around a visible multi-approach intersection zone.
+  - Target dense mixed traffic around ego and crossing approaches.
+- Highway/freeway scenarios:
+  - Stage on a corridor with at least two lanes per direction and visible opposite-direction flow.
+  - Target dense same-direction and opposite-direction traffic around ego.
+- For directional density contracts, prefer >=20 per required direction where map geometry allows; log achieved counts and retry expansion before proceeding.
+- Use at least 10 distinct vehicle blueprints/types across the full scene when available.
+- Script must actively enforce direction counts (retry/expand spawn selection until threshold is reached).
+- If full threshold cannot be met after retries due map/topology limits, continue with explicit warning + logged counts (do not silently pass).
+- Add realistic busy-area context objects (construction cones, barriers, warning props, parked service vehicles, etc.) in moderation.
+- Unless the scene is explicitly an obstacle/blockage scenario, place these objects on shoulders/medians/roadside only.
+- Do NOT place clutter objects in active travel lanes for behavioral scenarios (e.g., red-light violation, wrong-way, emergency priority).
+- Enforce off-lane placement by checking waypoint/lane context before spawn; skip placement if candidate is in a driving lane.
+- Keep object count balanced (avoid over-clutter that causes incidental collisions when scenario intent is behavioral).
+- Spawn objects so they are camera-visible and distributed across approaches/shoulders/median (not only one side).
+- Ensure dense traffic is visibly present around ego throughout the run: include moving actors behind ego, beside ego, and crossing approaches in front.
+- Keep a near-ego moving-traffic target active (recommended minimum around ego at any time: behind>=6, beside>=8, crossing>=8 when map allows).
+- Timing/staging must ensure core scene event + traffic flow + object context are clearly visible in the front view (and optional drone view if multi-angle capture is explicitly requested).
+
+1.9 STATIC MESH SPAWNING VIA `static.prop.mesh` (PREFERRED FOR TREES, ROCKS, DEBRIS)
+- CARLA's built-in StaticMeshFactory blueprint `static.prop.mesh` can spawn ANY UE4 static mesh
+  from the game content at runtime. Use this instead of improvising with barrels/boxes when
+  realistic scene objects are needed.
+- API pattern:
+    bp_lib = world.get_blueprint_library()
+    bp = bp_lib.find('static.prop.mesh')
+    bp.set_attribute('mesh_path', '/Game/Carla/Static/Vegetation/Trees/SM_OakTree_M_3.SM_OakTree_M_3')
+    bp.set_attribute('mass', '0')   # 0 = static fixture, >0 = physics-enabled (kg)
+    tree = world.try_spawn_actor(bp, transform)
+- For fallen/tumbled objects, set mass > 0 and rotate the transform (e.g., roll=-90 for a fallen tree).
+- Helper to build content paths from mesh name:
+    def mesh_content_path(mesh_name):
+        # mesh_name = 'SM_BeechTree_3'
+        return f'/Game/Carla/Static/Vegetation/Trees/{mesh_name}.{mesh_name}'
+- This works in stock packaged CARLA — no source rebuild or plugin needed.
+
+2. CAMERA OUTPUT (DEFAULT FRONT ONLY; 5 ANGLES ONLY IF EXPLICITLY REQUESTED)
+Default requirement: create ONE RGB camera attached to the primary vehicle.
+
+FRONT (hood-cam view - centered on windshield, showing engine hood at bottom):
+  Location(x=0.8, y=0.0, z=1.4), Rotation(pitch=8)
+
+Default camera settings: 1280x720 resolution, FOV=110, sensor.camera.rgb
+
+If (and only if) the user or scene specification explicitly requests all 5 angles, additionally create:
+- FRONT_LEFT: Location(x=-0.1, y=-0.4, z=1.2), Rotation(yaw=-60)
+- FRONT_RIGHT: Location(x=-0.1, y=0.4, z=1.2), Rotation(yaw=60)
+- REAR: Location(x=-0.2, y=0.3, z=1.25), Rotation(yaw=180, pitch=5)
+- DRONE_FOLLOW: Location(x=-12.0, y=0.0, z=12.0), Rotation(pitch=-25, yaw=0, roll=0)
+
+3. IMAGE SAVING - BGR TO RGB CONVERSION (CRITICAL!)
+CARLA outputs images in BGRA format. You MUST convert to RGB before saving:
+
+def save_image_to_disk(image, output_path):
+    """Save CARLA image as RGB PNG"""
+    try:
+        array = np.frombuffer(image.raw_data, dtype=np.uint8)
+        array = array.reshape((image.height, image.width, 4))
+        # CRITICAL: CARLA uses BGRA - convert BGR to RGB
+        array = array[:, :, :3][:, :, ::-1]  # BGR to RGB conversion
+        img = Image.fromarray(array)
+        img.save(output_path, 'PNG')
+        return True
+    except Exception as e:
+        print(f"[ERROR] Failed to save image: {e}")
+        return False
+
+4. SYNCHRONOUS MODE AND CAMERA SYNCHRONIZATION
+- settings.synchronous_mode = True
+- settings.fixed_delta_seconds = 0.05 (20 FPS)
+- For default front-only capture, use a simple per-frame front-camera callback buffer.
+- If multi-angle capture is explicitly requested, use threading.Event() to synchronize all requested cameras per frame before saving.
+
+Example synchronization pattern:
+
+import threading
+
+# Shared state (default front-camera-only capture)
+images_received = {'front': None}
+# WARNING: Do NOT reassign images_received inside main()!
+# Use images_received[key] = None to clear, not images_received = {...}
+images_lock = threading.Lock()
+frame_ready = threading.Event()
+
+def make_camera_callback(camera_name):
+    def callback(image):
+        with images_lock:
+            images_received[camera_name] = image
+            frame_ready.set()
+    return callback
+
+# Attach callback to front camera (default)
+front_camera.listen(make_camera_callback('front'))
+
+# CRITICAL: Camera warm-up - tick world several times BEFORE main loop to initialize cameras
+print("[INFO] Warming up cameras...")
+for _ in range(20):  # 20 warm-up ticks
+    world.tick()
+time.sleep(0.5)  # Give cameras time to start capturing
+print("[INFO] Cameras ready")
+
+# In main simulation loop:
+world.tick()
+if frame_ready.wait(timeout=1.0):
+    with images_lock:
+        save_image_to_disk(images_received['front'], front_path)
+    frame_number += 1
+else:
+    # Camera timeout - log warning but continue simulation
+    print(f"[WARNING] Frame {frame_number} camera timeout - skipping frame")
+frame_ready.clear()
+with images_lock:
+    images_received['front'] = None
+    # If multi-angle capture is explicitly requested, clear those keys too.
+
+5. OUTPUT STRUCTURE
+Default output folder structure (front camera only):
+
+scenes/bicycle_in_highway_lane/
+├── front/
+│   └── front_frame_00000001.png, front_frame_00000002.png, ...
+└── bicycle_in_highway_lane_simulation.log
+
+- Frame numbering: 8 digits, starting at 00000001
+- If multi-angle capture is explicitly requested, all requested cameras must save with the SAME frame number per tick
+
+================================================================================
+=== SCENARIO-SPECIFIC GUIDANCE ===
+================================================================================
+
+Analyze the SCENARIO keyword and DESCRIPTION to implement appropriate behavior:
+
+GENERAL SCENARIO REALISM GUIDELINES:
+
+UNAVAILABLE ASSET RULE (CRITICAL):
+- If a described object/pattern does NOT exist as a dedicated CARLA blueprint, FIRST check
+  whether an appropriate UE4 static mesh exists that can be spawned via `static.prop.mesh`.
+- **`static.prop.mesh` (StaticMeshFactory)** is built into stock packaged CARLA and can spawn
+  ANY static mesh by its UE4 content path at runtime — no source rebuild required.
+  Usage:
+    bp = bp_lib.find('static.prop.mesh')
+    bp.set_attribute('mesh_path', '/Game/Carla/Static/Vegetation/Trees/SM_BeechTree_3.SM_BeechTree_3')
+    bp.set_attribute('mass', '0')       # 0 = static, >0 = physics-enabled (e.g., 800 for fallen tree)
+    actor = world.try_spawn_actor(bp, transform)
+- Available mesh categories (non-exhaustive):
+  - Trees: `/Game/Carla/Static/Vegetation/Trees/SM_<Species>_<N>.SM_<Species>_<N>`
+    Species include: BeechTree, OakTree (S/M/L variants), Pine (S/M/L), Maple (S/M/L),
+    JapaneseMaple, CoconutPalm, FanPalm, Cypress, Acer, Ash, Aporosa, Sassafras, Wallnut, TreePine
+  - Bushes: `/Game/Carla/Static/Vegetation/Bushes/SM_<Name>.SM_<Name>`
+  - Rocks: `/Game/Carla/Static/Vegetation/Rocks/SM_<Name>.SM_<Name>`
+  - Barriers/Signs: `/Game/Carla/Static/TrafficSign/SM_<Name>.SM_<Name>`
+- Content path format: `/Game/Carla/Static/<Category>/<SubCategory>/<MeshName>.<MeshName>`
+- See SCENE_GENERATION_REFERENCE.md §9 for the full mesh catalog.
+- If NO suitable mesh exists either, THEN approximate using multiple available objects
+  (cones, barrels, debris, dumpsters, vehicles, particles) and scripted motion.
+- Use speed, oscillation, altitude, and coordinated positioning in front of the ego vehicle to mimic the effect.
+- Example (tornado): spawn debris props above ground, move them in circular/oscillating paths, add wind-like forces,
+  heavy rain, lightning flashes, and water splash effects while the ego vehicle approaches.
+
+PATH CLARITY RULES (Apply based on scenario type):
+
+1. BEHAVIORAL SCENARIOS (Red Light Violation, Wrong-Way Driver, Weather, Emergency Vehicle, etc.):
+   - Primary vehicle's lane should be CLEAR ahead unless explicitly stated otherwise
+   - Do NOT spawn vehicles or obstacles directly in the primary vehicle's path
+   - Construction/context objects must stay off active lanes (roadside/median only)
+   - Other actors should be in adjacent lanes, perpendicular lanes, or behind the primary vehicle
+   - Maintain high nearby traffic density without forcing collisions in ego lane
+   - Keep universal dense traffic + object context active, but position it to preserve the intended behavioral demonstration
+   - Focus is on demonstrating the BEHAVIOR, not causing collisions
+
+2. OBSTACLE SCENARIOS (Pothole, Debris, Fallen Objects, Pedestrian Crossing, Animal, etc.):
+   - DO spawn the obstacle/hazard in or near the primary vehicle's path as described
+   - Give the vehicle 3-5 seconds of approach time before encountering the obstacle
+   - Obstacle should be visible from the front camera for at least 50-100 frames
+   - Other traffic can be present but should not interfere with the obstacle interaction
+
+3. COLLISION/PILE-UP SCENARIOS (Jackknifing, Multi-car Crash, etc.):
+   - Spawn multiple vehicles involved in the incident
+   - Position to demonstrate the collision or near-miss as described
+   - Primary vehicle should approach the scene, not necessarily be involved
+
+TIMING AND SPACING:
+- Allow the scenario to unfold naturally over 5-15 seconds of simulation time
+- Spawn distance: obstacles/actors should be 30-80 meters ahead at scenario start
+- All critical elements should be visible from the front camera (and drone_follow too only if multi-angle capture is explicitly requested)
+
+FOR RED LIGHT VIOLATION SCENARIOS:
+- CRITICAL: The TARGET traffic light (the one the violator approaches) MUST be RED
+- DO NOT spawn pedestrians - this scenario focuses purely on the traffic light violation
+- DO NOT use autopilot - use MANUAL vehicle control (vehicle.apply_control) for reliable behavior
+- Duration should be at least 25 seconds to capture the full approach and crossing
+
+Step 1 - Find spawn point 40-55m before a traffic light, facing it:
+```python
+traffic_lights = world.get_actors().filter('traffic.traffic_light')
+best_spawn = None
+target_tl = None
+for sp in spawn_points:
+    sp_forward = sp.rotation.get_forward_vector()
+    for tl in traffic_lights:
+        dist = sp.location.distance(tl.get_location())
+        if 40.0 < dist < 55.0:
+            # Check if spawn point faces the traffic light
+            to_tl = tl.get_location() - sp.location
+            to_tl_len = to_tl.length()
+            to_tl_norm = carla.Vector3D(to_tl.x/to_tl_len, to_tl.y/to_tl_len, 0)
+            dot = sp_forward.x * to_tl_norm.x + sp_forward.y * to_tl_norm.y
+            if dot > 0.8:  # Well-aligned facing light
+                best_spawn = sp
+                target_tl = tl
+                break
+    if best_spawn:
+        break
+```
+
+Step 2 - Set ONLY the TARGET traffic light to RED (perpendicular lights stay green):
+```python
+# Keep ego-approach signal group RED, but keep all non-ego approaches in normal cycle.
+# Do NOT freeze the entire intersection to all-red.
+for tl in ego_approach_lights:
+    tl.set_state(carla.TrafficLightState.Red)
+    tl.set_red_time(9999.0)
+    tl.freeze(True)
+
+# For non-ego approaches either:
+# 1) leave normal controller active (freeze(False)), or
+# 2) apply explicit Green->Yellow->Red cycling.
+for tl in non_ego_lights:
+    tl.freeze(False)
+world.tick()
+print("[INFO] Ego-approach lights fixed RED; non-ego lights follow normal cycle")
+```
+
+Step 3 - Use MANUAL control to drive through red light at constant speed (~40 km/h):
+```python
+# In main loop - DO NOT USE AUTOPILOT
+TARGET_SPEED = 40.0 / 3.6  # 40 km/h in m/s
+vehicle_velocity = violator_vehicle.get_velocity()
+current_speed = math.sqrt(vehicle_velocity.x**2 + vehicle_velocity.y**2)
+
+# Simple throttle control to maintain speed
+if current_speed < TARGET_SPEED:
+    throttle = 0.7
+else:
+    throttle = 0.3
+
+# Get waypoints ahead and calculate steering for straight path
+# ... (waypoint following code)
+
+control = carla.VehicleControl(throttle=throttle, steer=steer, brake=0.0)
+violator_vehicle.apply_control(control)
+```
+
+- The vehicle should drive STRAIGHT through the intersection ignoring the red light
+- DO NOT spawn any vehicles in the violator's lane ahead
+- Keep significant moving traffic in perpendicular approaches and trailing/adjacent lanes so the violation occurs in visibly busy context.
+- Place contextual cones/barriers away from active travel lanes to avoid unintended collision artifacts in this scenario.
+- Validate with logs that non-ego signals are not permanently red (must show Green/Yellow phases during run).
+
+FOR OTHER TRAFFIC VIOLATION SCENARIOS (Wrong-Way Driver, etc.):
+- Find spawn point near traffic light as described above
+- Use traffic_manager.ignore_lights_percentage(vehicle, 100.0) for violating vehicle with autopilot
+- CRITICAL: The violating vehicle's lane MUST be clear ahead - do NOT spawn vehicles
+  in the same lane in front of the primary vehicle (prevents rear-end collisions)
+- Compliant vehicles should be positioned:
+  * In adjacent parallel lanes (stopped at their red light)
+  * In perpendicular lanes (moving through their green light)
+  * Behind the primary vehicle (following at safe distance)
+- Freeze traffic lights to prevent cycling: tl.freeze(True)
+
+FOR WEATHER SCENARIOS (Rain, Fog, Sandstorm, Snow, etc.):
+- Use carla.WeatherParameters to configure conditions
+- Key parameters: cloudiness, precipitation, fog_density, fog_distance, sun_altitude_angle
+- May implement gradual weather transition over time
+- REQUIRED FOR ALL SCENES: support modular time+weather control so a separate matrix
+  runner can execute 20 combinations after scene finalization.
+- Standalone scene script must remain single-run and accept one environment per run.
+- Required CLI args (environment contract):
+  --time-preset, --weather-preset, --sun-altitude, --sun-azimuth, --streetlights,
+  --cloudiness, --precipitation, --precipitation-deposits, --wind-intensity,
+  --fog-density, --fog-distance, --wetness
+- Standard time presets (shared JSON spec):
+  * noon (alt=45.0, azm=240.0)
+  * sunset (alt=2.0, azm=268.0)
+  * night (alt=-88.0, azm=320.0)
+  * sunrise (alt=1.05, azm=28.28)
+  * almost_night_no_streetlights (alt=0.01, azm=110.0; streetlights off)
+- Standard weather presets (shared JSON spec): clear, storm, foggy, worst
+- If no presets are provided, preserve the scene's intended default look
+
+FOR PEDESTRIAN/ANIMAL SCENARIOS (Crossing, Jaywalking, etc.):
+- Spawn pedestrians with walker.pedestrian.* blueprints
+- Use controller.ai.walker for AI movement
+- Configure walking path to cross vehicle's trajectory
+- Time the crossing to create the intended scenario
+
+FOR VEHICLE BEHAVIOR SCENARIOS (Swerving, Jackknifing, Wheelie, etc.):
+- Spawn the specific vehicle type mentioned
+- Apply erratic vehicle controls for reckless behavior
+- Other traffic should react realistically
+
+FOR ROAD OBSTACLE SCENARIOS (Debris, Pothole, Objects, etc.):
+- Spawn static props or actors as obstacles
+- Position in or near the vehicle's path
+- Timing is critical for reaction opportunity
+
+FOR INFRASTRUCTURE SCENARIOS (Bridge Collapse, Sinkhole, etc.):
+- Use available props and static meshes
+- May need creative approximation for complex effects
+- Block vehicle path dramatically
+
+FOR SURREAL/ADVERSARIAL SCENARIOS (Floating Objects, Giant Sphere, UFO, etc.):
+- Use creative physics manipulation where possible
+- Spawn props and manipulate their transforms
+- These test VLM's ability to handle unknown situations
+- Some effects may need visual approximation with available CARLA assets
+
+================================================================================
+=== TECHNICAL NOTES ===
+================================================================================
+
+- Filter out motorcycles/bikes as the primary/ego vehicle (use 4-wheel vehicles)
+- Spectator should follow the primary vehicle dynamically
+- Log progress every 200 frames: speed, position, scenario status
+- Include collision detection where relevant to the scenario
+- Duration configurable via --duration argument (default 25 seconds)
+- At 20 FPS, 25 seconds = 500 front-camera images by default
+- If 5-angle capture is explicitly requested, 25 seconds = 2500 total images
+- Hard-cap frame budget in code:
+  max_frames = min(int(args.duration * 20), 500)
+- Keep scenarios concise: complete all critical scene actions within first 20-25 seconds
+- Key scenario event should start early (ideally in first 5-10 seconds) and be clearly visible before frame 500
+
+COMMAND LINE ARGUMENTS:
+--host: CARLA server host (default 127.0.0.1)
+--port: CARLA server port (default 2000)
+--duration: Simulation duration in seconds (default 25)
+--output-dir: Output directory (default ./scenes/bicycle_in_highway_lane)
+--time-preset: Standard time preset key (default scene_default)
+--weather-preset: Standard weather preset key (default scene_default)
+--sun-altitude: Optional explicit sun altitude override
+--sun-azimuth: Optional explicit sun azimuth override
+--streetlights: Optional streetlights mode override (auto|on|off)
+--cloudiness / --precipitation / --precipitation-deposits / --wind-intensity
+--fog-density / --fog-distance / --wetness: Optional explicit weather overrides
+
+================================================================================
+
+Return a complete, runnable Python script with NO markdown formatting.
+The script must implement the exact scenario described while using front-camera-only
+capture by default (unless multi-angle capture is explicitly requested), with
+proper BGR to RGB conversion. The script must remain standalone and single-run,
+while exposing the environment CLI contract above so a separate matrix runner can
+generate 20 time×weather output folders later.
