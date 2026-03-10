@@ -17,6 +17,7 @@ Lang2Drive provides a workbook-driven workflow for preparing CARLA scenarios, ru
 - `scene_excel_utils.py`, `research_scene_history_excel.py`, `shot_history_excel.py`: workbook helpers
 - `scene_utils/`: shared time/weather support code
 - `generated_prompts/`, `generated_code/`: five curated prompt/code examples used as public artifacts
+- `contrib/early_history/`: recovered collaborator-era utilities from the private repo history, kept outside the main paper workflow surface
 - `tests/`: non-CARLA unit tests for the released workflow
 
 See `ARTIFACT_INDEX.md` for the exact curated prompt/code folders shipped with this release.
@@ -80,6 +81,7 @@ Included in this repository:
 - The maintained public workflow and helper modules
 - A sanitized workbook template
 - Five curated prompt/code examples
+- A small set of recovered collaborator-era utilities under `contrib/early_history/`
 - Public documentation and non-CARLA tests
 
 Intentionally excluded:
