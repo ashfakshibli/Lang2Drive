@@ -1,0 +1,51 @@
+{
+  "system": [
+    "You are an autonomous driving expert specializing in recognizing traffic scenes and recommending ego-vehicle behavior."
+  ],
+  "general_perception": [
+    "You receive a traffic image captured from the perspective of the ego vehicle.",
+    "Focus on the road users and scene elements that influence the future driving behavior of the ego vehicle.",
+    "Relevant classes may include vehicles, vulnerable road users, traffic signs, traffic lights, traffic cones, barriers, road state, and other objects such as debris.",
+    "Describe each relevant object once and explain why it matters.",
+    "Return strict JSON using this structure:",
+    "{",
+    "  \"vehicles\": [{\"description\": \"...\", \"explanation\": \"...\"}],",
+    "  \"vulnerable_road_users\": [{\"description\": \"...\", \"explanation\": \"...\"}],",
+    "  \"traffic_signs\": [{\"description\": \"...\", \"explanation\": \"...\"}],",
+    "  \"traffic_lights\": [{\"description\": \"...\", \"explanation\": \"...\"}],",
+    "  \"traffic_cones\": [{\"description\": \"...\", \"explanation\": \"...\"}],",
+    "  \"barriers\": [{\"description\": \"...\", \"explanation\": \"...\"}],",
+    "  \"other_objects\": [{\"description\": \"...\", \"explanation\": \"...\"}]",
+    "}",
+    "Use empty arrays when a category is absent."
+  ],
+  "regional_perception": [
+    "This is a traffic image captured from the perspective of the ego vehicle.",
+    "Describe each object surrounded by a red rectangular box and explain its influence on the future driving behavior of the ego vehicle.",
+    "The serial number and category of each object are shown above the red box.",
+    "Return strict JSON in the form:",
+    "{",
+    "  \"1\": {\"description and explanation\": \"...\"},",
+    "  \"2\": {\"description and explanation\": \"...\"}",
+    "}",
+    "Use the serial number as the key.",
+    "Describe each object independently and do not compare it with other boxed objects.",
+    "Do not refer to an object as 'the first box' or 'the second box'; describe it by its visible properties and role."
+  ],
+  "actionable_suggestion": [
+    "Based on the current driving scene, generate a structured driving action plan for the ego vehicle.",
+    "Your response must include an immediate action, a short-term plan, a contingency plan, a primary hazard, a risk level, and a risk explanation.",
+    "Be specific and operational.",
+    "Do not provide generic advice.",
+    "Base all reasoning strictly on the visible scene and do not hallucinate unseen objects.",
+    "Return strict JSON in the form:",
+    "{",
+    "  \"immediate_action\": \"...\",",
+    "  \"short_term_plan\": \"...\",",
+    "  \"contingency_plan\": \"...\",",
+    "  \"primary_hazard\": \"...\",",
+    "  \"risk_level\": \"low/medium/high\",",
+    "  \"risk_explanation\": \"...\"",
+    "}"
+  ]
+}

@@ -16,8 +16,9 @@ Lang2Drive provides a workbook-driven workflow for preparing CARLA scenarios, ru
 - `carla_wine_bridge.py`: runtime adapter for local and Wine-backed execution
 - `scene_excel_utils.py`, `research_scene_history_excel.py`, `shot_history_excel.py`: workbook helpers
 - `scene_utils/`: shared time/weather support code
+- `keyframe_selection.py`: CLIP-based keyframe selection utility restored from an earlier paper-stage commit
+- `run_preannotation.py`, `run_gpt.sh`, `prompts.json`, `test.py`: GPT-based preannotation utilities restored from earlier paper-stage commits
 - `generated_prompts/`, `generated_code/`: five curated prompt/code examples used as public artifacts
-- `contrib/early_history/`: recovered collaborator-era utilities from the private repo history, kept outside the main paper workflow surface
 - `tests/`: non-CARLA unit tests for the released workflow
 
 See `ARTIFACT_INDEX.md` for the exact curated prompt/code folders shipped with this release.
@@ -35,6 +36,8 @@ Install dependencies:
 ```bash
 python3 -m pip install -r requirements.txt
 ```
+
+The keyframe-selection utility also relies on `open-clip-torch` and its `torch` backend, which are included in `requirements.txt`.
 
 ## Reproducing the Pipeline
 
@@ -74,6 +77,13 @@ Run the shared matrix benchmark:
 python3 agentic_wine_time_weather_matrix_runner.py --handoff-dir handoffs
 ```
 
+Optional annotation utilities:
+
+```bash
+python3 keyframe_selection.py --input_root /path/to/frames --output_root /path/to/keyframes
+./run_gpt.sh --input_dir /path/to/images --output_dir /path/to/preannotations
+```
+
 ## Release Scope
 
 Included in this repository:
@@ -81,7 +91,7 @@ Included in this repository:
 - The maintained public workflow and helper modules
 - A sanitized workbook template
 - Five curated prompt/code examples
-- A small set of recovered collaborator-era utilities under `contrib/early_history/`
+- Keyframe-selection and GPT preannotation utilities from earlier paper-stage commits
 - Public documentation and non-CARLA tests
 
 Intentionally excluded:

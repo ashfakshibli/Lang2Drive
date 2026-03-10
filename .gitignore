@@ -21,11 +21,6 @@ htmlcov/
 .coverage
 .coverage.*
 .pytest_cache/
-contrib/early_history/camera_sim/output_images/
-contrib/early_history/scene_edit/generated_scenarios/
-contrib/early_history/scene_edit/editable_simulation_output/
-contrib/early_history/scene_edit/rag_scenerio_generator/.env
-contrib/early_history/scene_edit/rag_scenerio_generator/venv_langchain/
 
 # Generated prompts: ignore new runs by default, keep curated examples
 generated_prompts/*
