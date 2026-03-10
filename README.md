@@ -116,13 +116,3 @@ Run the non-CARLA test suite:
 ```bash
 python3 -m unittest discover -s tests -q
 ```
-
-Optional hygiene scan:
-
-```bash
-rg -n "<redacted>|home directory|personal email" .
-```
-
-## Citation
-
-Citation metadata for the Lang2Drive paper can be added here once the manuscript metadata is finalized. Until then, reference the repository URL directly when needed.
